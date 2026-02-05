@@ -1,0 +1,45 @@
+# 工作流名称（可自定义）
+name: Deploy Vite React to GitHub Pages
+
+# 触发条件：推送到 main 分支时自动运行
+on:
+  push:
+    branches: [ main ]  # 你的仓库默认分支，一般是 main 或 master
+
+# 定义要执行的任务
+jobs:
+  deploy:
+    # 运行环境：使用最新的 Ubuntu 系统
+    runs-on: ubuntu-latest
+
+    # 任务步骤（按顺序执行）
+    steps:
+      # 步骤1：拉取仓库代码到自动化服务器
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 拉取完整的提交历史，避免编译出错
+
+      # 步骤2：安装 Node.js（Vite 编译需要 Node 环境）
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20  # Node 版本，20 是稳定版，也可以用 18
+          cache: 'npm'      # 缓存 npm 依赖，加速下次部署
+
+      # 步骤3：安装项目依赖（npm install）
+      - name: Install dependencies
+        run: npm install  # 如果你的项目用 yarn/pnpm，改成 yarn install 或 pnpm install
+
+      # 步骤4：编译 Vite 项目（生成 dist 文件夹）
+      - name: Build Vite project
+        run: npm run build  # 对应 package.json 里的 build 脚本
+
+      # 步骤5：部署编译后的 dist 文件夹到 GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4  # 成熟的 Pages 部署插件
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # GitHub 自动生成的令牌，无需手动配置
+          publish_dir: ./dist  # 要部署的文件夹（Vite 编译后默认是 dist）
+          # 可选：如果部署后路径有问题，添加以下配置
+          # publish_branch: gh-pages  # 部署到 gh-pages 分支（Pages 默认读取这个分支）
